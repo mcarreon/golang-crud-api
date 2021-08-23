@@ -62,8 +62,8 @@ func (s *StubBookStore) UpdateBook(title string, fields map[string]interface{}) 
 func TestGETBooks(t *testing.T) {
 	t.Run("it returns all books as JSON and returns 200", func(t *testing.T) {
 		testBooks := []Book{
-			{"Test", "John", "Publishers", 5, "CheckedIn"},
-			{"Test2", "Jill", "Publishers", 3, "CheckedOut"},
+			{"Test", "John", timePlaceholder, "Publishers", 5, "CheckedIn"},
+			{"Test2", "Jill", timePlaceholder, "Publishers", 3, "CheckedOut"},
 		}
 
 		store := StubBookStore{testBooks}
@@ -98,7 +98,7 @@ func TestGETBooks(t *testing.T) {
 
 func TestGETBook(t *testing.T) {
 	testBook := []Book{
-		{"Test", "John", "Publishers", 5, "CheckedIn"},
+		{"Test", "John", timePlaceholder, "Publishers", 5, "CheckedIn"},
 	}
 	store := StubBookStore{testBook}
 	server := NewBookServer(&store)
@@ -130,7 +130,7 @@ func TestPOSTBook(t *testing.T) {
 		store := StubBookStore{[]Book{}}
 		server := NewBookServer(&store)
 
-		var jsonStr = []byte(`{"title": "Test Book", "author": "John", "publisher": "publisher", "rating": 5, "status": "CheckedIn"}`)
+		var jsonStr = []byte(`{"title": "Test Book", "author": "John", "publishDate": "2005-06-13T04:40:51Z", "publisher": "publisher", "rating": 5, "status": "CheckedIn"}`)
 
 		request := newPostBookRequest(jsonStr)
 		response := httptest.NewRecorder()
@@ -176,9 +176,9 @@ func TestPOSTBook(t *testing.T) {
 func TestPUTBook(t *testing.T) {
 	t.Run("should update book and recieve 200 status", func(t *testing.T) {
 		testBook := []Book{
-			{"Test", "John", "Publishers", 5, "CheckedIn"},
+			{"Test", "John", timePlaceholder, "Publishers", 5, "CheckedIn"},
 		}
-		targetBook := Book{"Test", "John", "Publishers", 3, "CheckedOut"}
+		targetBook := Book{"Test", "John", timePlaceholder, "Publishers", 3, "CheckedOut"}
 		store := StubBookStore{testBook}
 		server := NewBookServer(&store)
 
@@ -226,7 +226,7 @@ func TestPUTBook(t *testing.T) {
 
 func TestDELBook(t *testing.T) {
 	testBook := []Book{
-		{"Test", "John", "Publishers", 5, "CheckedIn"},
+		{"Test", "John", timePlaceholder, "Publishers", 5, "CheckedIn"},
 	}
 	store := StubBookStore{testBook}
 	server := NewBookServer(&store)

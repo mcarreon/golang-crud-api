@@ -3,7 +3,11 @@ package main
 import (
 	"log"
 	"net/http"
+	"time"
 )
+
+var timePlaceholder = time.Date(
+	2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
 
 type InMemoryBookStore struct {
 	books []Book
@@ -11,8 +15,8 @@ type InMemoryBookStore struct {
 
 func (i *InMemoryBookStore) GetBooks() []Book {
 	books := []Book{
-		{"Test", "John", "Publishers", 5, "CheckedIn"},
-		{"Test2", "Jill", "Publishers", 3, "CheckedOut"},
+		{"Test", "John", timePlaceholder, "Publishers", 5, "CheckedIn"},
+		{"Test2", "Jill", timePlaceholder, "Publishers", 3, "CheckedOut"},
 	}
 
 	return books
