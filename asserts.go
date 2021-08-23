@@ -21,7 +21,7 @@ func assertResponseBody(t testing.TB, got, want string) {
 	}
 }
 
-func assertBooks(t testing.TB, got, want []Book) {
+func assertBook(t testing.TB, got, want Book) {
 	t.Helper()
 
 	if !reflect.DeepEqual(got, want) {

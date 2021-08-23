@@ -20,6 +20,14 @@ func (i *InMemoryBookStore) GetBooks() []Book {
 
 func (i *InMemoryBookStore) SaveBook(book Book) {}
 
+func (i *InMemoryBookStore) DeleteBook(title string) {}
+
+func (i *InMemoryBookStore) UpdateBook(title string) {}
+
+func (i *InMemoryBookStore) GetBook(title string) Book {
+	return Book{}
+}
+
 func NewInMemoryBookStore() *InMemoryBookStore {
 	return &InMemoryBookStore{}
 }

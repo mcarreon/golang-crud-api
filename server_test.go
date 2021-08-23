@@ -18,9 +18,34 @@ func (s *StubBookStore) GetBooks() []Book {
 	return s.books
 }
 
+func (s *StubBookStore) GetBook(title string) Book {
+	for _, item := range s.books {
+		if item.Title == title {
+			return item
+		}
+	}
+
+	return Book{}
+}
+
 func (s *StubBookStore) SaveBook(book Book) {
 	s.books = append(s.books, book)
 }
+
+func (s *StubBookStore) DeleteBook(title string) {
+	var index int
+
+	for i, item := range s.books {
+		if item.Title == title {
+			index = i
+		}
+	}
+
+	s.books[index] = s.books[len(s.books)-1]
+	s.books = s.books[:len(s.books)-1]
+}
+
+func (s *StubBookStore) UpdateBook(title string) {}
 
 func TestGETBooks(t *testing.T) {
 	t.Run("it returns 200 on /books", func(t *testing.T) {
@@ -54,6 +79,35 @@ func TestGETBooks(t *testing.T) {
 	// 	assertStatus(t, response.Code, http.StatusOK)
 	// 	assertBooks(t, got, testBooks)
 	// })
+}
+
+func TestGETBook(t *testing.T) {
+	testBook := []Book{
+		{"Test", "John", "Publishers", 5, "CheckedIn"},
+	}
+	store := StubBookStore{testBook}
+	server := NewBookServer(&store)
+
+	t.Run("should get a book and recieve 200 status", func(t *testing.T) {
+		request := newBookRequest(http.MethodGet, "Test")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		got := getBookFromResponse(t, response.Body)
+
+		assertStatus(t, response.Code, http.StatusOK)
+		assertBook(t, got, testBook[0])
+	})
+
+	t.Run("should fail to find a book and recieve 404 status", func(t *testing.T) {
+		request := newBookRequest(http.MethodGet, "")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusNotFound)
+	})
 }
 
 func TestPOSTBook(t *testing.T) {
@@ -105,11 +159,16 @@ func TestPOSTBook(t *testing.T) {
 }
 
 func TestPUTBook(t *testing.T) {
-	t.Run("should recieve 200 status", func(t *testing.T) {
-		store := StubBookStore{[]Book{}}
+	t.Run("should update book and recieve 200 status", func(t *testing.T) {
+		testBook := []Book{
+			{"Test", "John", "Publishers", 5, "CheckedIn"},
+		}
+		store := StubBookStore{testBook}
 		server := NewBookServer(&store)
 
-		request := newPutBookRequest()
+		var jsonStr = []byte(`{"rating": 3, "status": "checkedOut"}`)
+
+		request := newPutBookRequest("Test", jsonStr)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
@@ -118,10 +177,52 @@ func TestPUTBook(t *testing.T) {
 	})
 }
 
+func TestDELBook(t *testing.T) {
+	testBook := []Book{
+		{"Test", "John", "Publishers", 5, "CheckedIn"},
+	}
+	store := StubBookStore{testBook}
+	server := NewBookServer(&store)
+
+	t.Run("should delete item and recieve 200 status", func(t *testing.T) {
+		request := newBookRequest(http.MethodDelete, "Test")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusOK)
+		assertBooksLen(t, len(store.books), 0)
+	})
+
+	t.Run("should fail to find item and recieve 404 status", func(t *testing.T) {
+		request := newBookRequest(http.MethodDelete, "Test")
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusNotFound)
+		assertBooksLen(t, len(store.books), 0)
+	})
+}
+
 func getBooksFromResponse(t testing.TB, body io.Reader) (book []Book) {
 	t.Helper()
 
 	book, err := NewBooks(body)
+
+	if err != nil {
+		t.Fatalf("Unable to parse response from server %q into books, %v", body, err)
+	}
+
+	return book
+}
+
+func getBookFromResponse(t testing.TB, body io.Reader) Book {
+	t.Helper()
+
+	var book Book
+
+	err := json.NewDecoder(body).Decode(&book)
 
 	if err != nil {
 		t.Fatalf("Unable to parse response from server %q into books, %v", body, err)
@@ -141,8 +242,9 @@ func NewBooks(rdr io.Reader) ([]Book, error) {
 	return book, err
 }
 
-func newPostBookRequest(jsonStr []byte) *http.Request {
-	request, _ := http.NewRequest(http.MethodPost, "/book", bytes.NewBuffer(jsonStr))
+// Universal request for GET/DEL specific book
+func newBookRequest(method, title string) *http.Request {
+	request, _ := http.NewRequest(method, fmt.Sprintf("/books/%s", title), nil)
 
 	return request
 }
@@ -153,8 +255,14 @@ func newGetBooksRequest() *http.Request {
 	return request
 }
 
-func newPutBookRequest() *http.Request {
-	request, _ := http.NewRequest(http.MethodPut, "/books/test", nil)
+func newPostBookRequest(jsonStr []byte) *http.Request {
+	request, _ := http.NewRequest(http.MethodPost, "/book", bytes.NewBuffer(jsonStr))
+
+	return request
+}
+
+func newPutBookRequest(title string, jsonStr []byte) *http.Request {
+	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/books/%s", title), bytes.NewBuffer(jsonStr))
 
 	return request
 }
