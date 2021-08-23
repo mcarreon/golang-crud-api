@@ -33,22 +33,54 @@ func (s *StubBookStore) SaveBook(book Book) {
 }
 
 func (s *StubBookStore) DeleteBook(title string) {
-	var index int
-
-	for i, item := range s.books {
-		if item.Title == title {
-			index = i
-		}
-	}
+	index := GetIndexOfStruct(s.books, title)
 
 	s.books[index] = s.books[len(s.books)-1]
 	s.books = s.books[:len(s.books)-1]
 }
 
-func (s *StubBookStore) UpdateBook(title string) {}
+func (s *StubBookStore) UpdateBook(title string, fields map[string]interface{}) {
+	index := GetIndexOfStruct(s.books, title)
+
+	for key, field := range fields {
+		switch key {
+		case "title":
+			s.books[index].Title = field.(string)
+		case "author":
+			s.books[index].Author = field.(string)
+		case "publisher":
+			s.books[index].Publisher = field.(string)
+		case "rating":
+			floatNum := field.(float64)
+			s.books[index].Rating = int(floatNum)
+		case "status":
+			s.books[index].Status = field.(string)
+		}
+	}
+}
 
 func TestGETBooks(t *testing.T) {
-	t.Run("it returns 200 on /books", func(t *testing.T) {
+	t.Run("it returns all books as JSON and returns 200", func(t *testing.T) {
+		testBooks := []Book{
+			{"Test", "John", "Publishers", 5, "CheckedIn"},
+			{"Test2", "Jill", "Publishers", 3, "CheckedOut"},
+		}
+
+		store := StubBookStore{testBooks}
+		server := NewBookServer(&store)
+
+		request := newGetBooksRequest()
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		got := getBooksFromResponse(t, response.Body)
+
+		assertStatus(t, response.Code, http.StatusOK)
+		assertBooks(t, got, testBooks)
+	})
+
+	t.Run("should not grab any books, and send back 404", func(t *testing.T) {
 		store := StubBookStore{}
 		server := NewBookServer(&store)
 
@@ -57,28 +89,11 @@ func TestGETBooks(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Code, http.StatusOK)
+		got := getBooksFromResponse(t, response.Body)
+
+		assertBooksLen(t, len(got), 0)
+		assertStatus(t, response.Code, http.StatusNotFound)
 	})
-
-	// t.Run("it returns all books as JSON", func(t *testing.T) {
-	// 	testBooks := []Book{
-	// 		{"Test", "John", "Publishers", 5, "CheckedIn"},
-	// 		{"Test2", "Jill", "Publishers", 3, "CheckedOut"},
-	// 	}
-
-	// 	store := StubBookStore{testBooks}
-	// 	server := NewBookServer(&store)
-
-	// 	request := newGetBooksRequest()
-	// 	response := httptest.NewRecorder()
-
-	// 	server.ServeHTTP(response, request)
-
-	// 	got := getBooksFromResponse(t, response.Body)
-
-	// 	assertStatus(t, response.Code, http.StatusOK)
-	// 	assertBooks(t, got, testBooks)
-	// })
 }
 
 func TestGETBook(t *testing.T) {
@@ -115,7 +130,7 @@ func TestPOSTBook(t *testing.T) {
 		store := StubBookStore{[]Book{}}
 		server := NewBookServer(&store)
 
-		var jsonStr = []byte(`{"title": "Test Book", "author": "John", "publisher": "publisher", "rating": 5, "status": "checkedIn"}`)
+		var jsonStr = []byte(`{"title": "Test Book", "author": "John", "publisher": "publisher", "rating": 5, "status": "CheckedIn"}`)
 
 		request := newPostBookRequest(jsonStr)
 		response := httptest.NewRecorder()
@@ -130,7 +145,7 @@ func TestPOSTBook(t *testing.T) {
 		store := StubBookStore{[]Book{}}
 		server := NewBookServer(&store)
 
-		var jsonStr = []byte(`{"title": "", "author": "John", "publisher": "publisher", "rating": 5, "status": "checkedIn"}`)
+		var jsonStr = []byte(`{"title": "", "author": "John", "publisher": "publisher", "rating": 5, "status": "CheckedIn"}`)
 
 		request := newPostBookRequest(jsonStr)
 		response := httptest.NewRecorder()
@@ -163,17 +178,49 @@ func TestPUTBook(t *testing.T) {
 		testBook := []Book{
 			{"Test", "John", "Publishers", 5, "CheckedIn"},
 		}
+		targetBook := Book{"Test", "John", "Publishers", 3, "CheckedOut"}
 		store := StubBookStore{testBook}
 		server := NewBookServer(&store)
 
-		var jsonStr = []byte(`{"rating": 3, "status": "checkedOut"}`)
+		var jsonStr = []byte(`{"rating": 3, "status": "CheckedOut"}`)
 
 		request := newPutBookRequest("Test", jsonStr)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)
 
+		got := store.GetBook("Test")
+
 		assertStatus(t, response.Code, http.StatusOK)
+		assertBook(t, got, targetBook)
+	})
+
+	t.Run("should fail to find book and recieve 404 status", func(t *testing.T) {
+		store := StubBookStore{}
+		server := NewBookServer(&store)
+
+		var jsonStr = []byte(`{"rating": 3, "status": "CheckedOut"}`)
+
+		request := newPutBookRequest("Test", jsonStr)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusNotFound)
+	})
+
+	t.Run("should fail to parse input and recieve 422 status", func(t *testing.T) {
+		store := StubBookStore{}
+		server := NewBookServer(&store)
+
+		var jsonStr = []byte(`{"rating": 3, "status": "CheckedOut}`)
+
+		request := newPutBookRequest("Test", jsonStr)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusNotFound)
 	})
 }
 

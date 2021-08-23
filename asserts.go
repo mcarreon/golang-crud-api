@@ -14,6 +14,14 @@ func assertStatus(t testing.TB, got, want int) {
 	}
 }
 
+func assertBooks(t testing.TB, got, want []Book) {
+	t.Helper()
+
+	if !reflect.DeepEqual(got, want) {
+		t.Errorf("got %v want %v", got, want)
+	}
+}
+
 func assertResponseBody(t testing.TB, got, want string) {
 	t.Helper()
 	if got != want {

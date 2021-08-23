@@ -22,7 +22,7 @@ func (i *InMemoryBookStore) SaveBook(book Book) {}
 
 func (i *InMemoryBookStore) DeleteBook(title string) {}
 
-func (i *InMemoryBookStore) UpdateBook(title string) {}
+func (i *InMemoryBookStore) UpdateBook(title string, fields map[string]interface{}) {}
 
 func (i *InMemoryBookStore) GetBook(title string) Book {
 	return Book{}

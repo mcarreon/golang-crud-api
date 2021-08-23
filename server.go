@@ -12,7 +12,7 @@ type BookStore interface {
 	GetBooks() []Book
 	GetBook(title string) Book
 	SaveBook(book Book)
-	UpdateBook(title string)
+	UpdateBook(title string, fields map[string]interface{})
 	DeleteBook(title string)
 }
 
@@ -56,14 +56,13 @@ func (b *BookServer) bookHandler(w http.ResponseWriter, r *http.Request) {
 // Handles GET request for all books
 func (b *BookServer) booksHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", jsonContentType)
+	books := b.store.GetBooks()
 
-	testBooks := []Book{
-		{"Test", "John", "Publishers", 5, "CheckedIn"},
-		{"Test2", "Jill", "Publishers", 3, "CheckedOut"},
+	if len(books) == 0 {
+		w.WriteHeader(http.StatusNotFound)
 	}
 
-	json.NewEncoder(w).Encode(testBooks)
-	//json.NewEncoder(w).Encode(b.store.GetBooks())
+	json.NewEncoder(w).Encode(b.store.GetBooks())
 }
 
 // Handles POST request for books
@@ -105,11 +104,21 @@ func (b *BookServer) getBook(w http.ResponseWriter, r *http.Request, title strin
 func (b *BookServer) updateBook(w http.ResponseWriter, r *http.Request, title string) {
 	book := b.store.GetBook(title)
 
+	// If unable to find book, 404
 	if (Book{}) == book {
 		w.WriteHeader(http.StatusNotFound)
-	} else {
-		b.store.UpdateBook(title)
+		return
 	}
+
+	fields, err := DecodeUpdateFields(r)
+
+	// If unable to process update fields, 422
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+
+	b.store.UpdateBook(title, fields)
 }
 
 // DEL request functionality
