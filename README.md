@@ -18,12 +18,12 @@ There are 2 get routes:
 
 ```text
 /books 
-/book/[title]
+/books/[title]
 ```
 
 /books returns all books in the DB
 
-/book/[title] returns a book with a matching title
+/books/[title] returns a book with a matching title
 
 ### POST
 
@@ -47,18 +47,18 @@ example body params:
 ### PUT
 
 ```text
-/book/[title]
+/books/[title]
 ```
 
-/book/[title] updates a book with matching title using supplied body params. Any number of params may be entered matching the POST example.
+/books/[title] updates a book with matching title using supplied body params. Any number of params may be entered matching the POST example.
 
 ### DELETE
 
 ```text
-/book/[title]
+/books/[title]
 ```
 
-/book/[title] deletes a book matching the supplied title.
+/books/[title] deletes a book matching the supplied title.
 
 ## Write-Up
 
