@@ -1,14 +1,23 @@
 FROM golang:alpine as builder
-COPY go.mod go.sum /go/src/github.com/mcarreon/golang-crud-api/
-WORKDIR /go/src/github.com/mcarreon/golang-crud-api
+
+RUN apk update && apk add --no-cache git
+
+WORKDIR /app
+
+COPY go.mod ./
+COPY go.sum ./
+
 RUN go mod download
-COPY . /go/src/github.com/mcarreon/golang-crud-api
-RUN CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o build/golang-crud-api github.com/mcarreon/golang-crud-api/
 
+COPY . .
 
-FROM alpine
-RUN apk add --no-cache ca-certificates && update-ca-certificates
-COPY --from=builder /go/src/github.com/mcarreon/golang-crud-api/golang-crud-api.exe /usr/bin/golang-crud-api
-EXPOSE 3000 3000
-RUN chmod a+x /usr/bin/golang-crud-api
-ENTRYPOINT ["/usr/bin/golang-crud-api"]
+RUN CGO_ENABLED=0 go test server_test.go asserts.go models.go server.go utils.go 
+RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o ./bin/main .
+
+EXPOSE 8080
+
+FROM scratch
+
+COPY --from=builder /app/bin/main .
+
+CMD ["./main"]

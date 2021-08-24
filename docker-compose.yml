@@ -1,24 +1,33 @@
 version: "3.7"
 services:
-  database:
-    image: postgres
-    restart: always
-    env_file:
-      - .env
-    ports:
-      - "5432:5432"
+
+  app: 
+    container_name: golang-crud-api
+    build: .
+    ports: 
+      - 8080:8080
+    restart: on-failure
+    environment:
+      PORT: 8080
+      DB_CONN: "postgres://postgres:password@db:5432/go?sslmode=disable"
     volumes:
-      - data:/var/lib/postgresql/data
-  server:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    env_file: .env
+      - .:/app
     depends_on:
-      - database
-    networks:
-      - default
+      - db
+    links:
+      - db
+  
+  db:
+    image: postgres:alpine
+    container_name: db
     ports:
-      - "3000:3000"
-volumes:
-  data:
+      - '5432:5432'
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "password"
+      POSTGRES_DB: "go"
+      TZ: 'UTC'
+      PGTZ: 'UTC'
+    volumes:
+      - ./db_init/create_books_table.sql:/docker-entrypoint-initdb.d/20-create.sql
+      - ./db_init/insert_test_items.sql:/docker-entrypoint-initdb.d/30-insert.sql
