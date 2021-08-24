@@ -7,6 +7,10 @@ docker-compose up --build
 
 ```
 
+### Quick Info
+
+Made with Docker, Golang, and Postgresql
+
 ## Routes
 
 ### GET
