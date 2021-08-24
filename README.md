@@ -85,10 +85,12 @@ I was also unable to do any package splitting(?). For some reason, when I create
 +-- main.go
 ```
 
-Tests on the route functionality run when the container is built. This is because I was unable to cli into the container for some reason, so its set where the build fails if the unit tests fail. Integration tests are included and can be run locally, but because I could not cli into the container, I'm unable to run the integration tests manually. I'm sure the is a way to have the tests run after the database has been finished initializing, but I'm unsure how to write that functionality with docker.
+Tests on the route functionality run when the container is built. This is due to being unable to cli into the container for some reason, so its set where the build fails if the unit tests fail. Integration tests are included and can be run locally, but because I could not cli into the container, I'm unable to run the integration tests manually. I'm sure the is a way to have the tests run after the database has been finished initializing, but I'm unsure how to write that functionality with docker.
 
 ### Improvements
 
 A couple things I would implement would be more descriptive error responses - currently I'm only sending back the status code.
 
-Possibly adding a UUID lookup to allow for searches on books with duplicate titles but different meta data.
+Possibly adding a UUID lookup to allow for more accurate searches on books with duplicate titles but different meta data.
+
+Getting the integration tests to run automatically after the postgres database is initialized and populated.
