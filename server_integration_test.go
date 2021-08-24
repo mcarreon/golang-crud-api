@@ -6,8 +6,8 @@ import (
 	"testing"
 )
 
-const firstBook = `{"title": "Integration Book", "author": "John", "publishDate": "2005-06-13T04:40:51Z", "publisher": "publisher", "rating": 5, "status": "CheckedIn"}`
-const updateBook = `{"rating": 10, "status": "CheckedOut"}`
+const firstBook = `{"title": "Integration Book", "author": "John", "publishDate": "2005-06-13T04:40:51Z", "publisher": "publisher", "rating": 3, "status": "CheckedIn"}`
+const updateBook = `{"rating": 1, "status": "CheckedOut"}`
 
 // Теsts creating a book, getting it, updating it, then deleting it
 // Also creates a book to ensure nonempty datastore and attempts to grab all books

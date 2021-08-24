@@ -1,10 +1,6 @@
 package main
 
 import (
-	"bytes"
-	"encoding/json"
-	"fmt"
-	"io"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -130,7 +126,7 @@ func TestPOSTBook(t *testing.T) {
 		store := StubBookStore{[]Book{}}
 		server := NewBookServer(&store)
 
-		var jsonStr = []byte(`{"title": "Test Book", "author": "John", "publishDate": "2005-06-13T04:40:51Z", "publisher": "publisher", "rating": 5, "status": "CheckedIn"}`)
+		var jsonStr = []byte(`{"title": "Test Book", "author": "John", "publishDate": "2005-06-13T04:40:51Z", "publisher": "publisher", "rating": 3, "status": "CheckedIn"}`)
 
 		request := newPostBookRequest(jsonStr)
 		response := httptest.NewRecorder()
@@ -226,7 +222,7 @@ func TestPUTBook(t *testing.T) {
 
 func TestDELBook(t *testing.T) {
 	testBook := []Book{
-		{"Test", "John", timePlaceholder, "Publishers", 5, "CheckedIn"},
+		{"Test", "John", timePlaceholder, "Publishers", 3, "CheckedIn"},
 	}
 	store := StubBookStore{testBook}
 	server := NewBookServer(&store)
@@ -250,66 +246,4 @@ func TestDELBook(t *testing.T) {
 		assertStatus(t, response.Code, http.StatusNotFound)
 		assertBooksLen(t, len(store.books), 0)
 	})
-}
-
-func getBooksFromResponse(t testing.TB, body io.Reader) (book []Book) {
-	t.Helper()
-
-	book, err := NewBooks(body)
-
-	if err != nil {
-		t.Fatalf("Unable to parse response from server %q into books, %v", body, err)
-	}
-
-	return book
-}
-
-func getBookFromResponse(t testing.TB, body io.Reader) Book {
-	t.Helper()
-
-	var book Book
-
-	err := json.NewDecoder(body).Decode(&book)
-
-	if err != nil {
-		t.Fatalf("Unable to parse response from server %q into books, %v", body, err)
-	}
-
-	return book
-}
-
-func NewBooks(rdr io.Reader) ([]Book, error) {
-	var book []Book
-	err := json.NewDecoder(rdr).Decode(&book)
-
-	if err != nil {
-		err = fmt.Errorf("problem parsing book, %v", err)
-	}
-
-	return book, err
-}
-
-// Universal request for GET/DEL specific book
-func newBookRequest(method, title string) *http.Request {
-	request, _ := http.NewRequest(method, fmt.Sprintf("/books/%s", title), nil)
-
-	return request
-}
-
-func newGetBooksRequest() *http.Request {
-	request, _ := http.NewRequest(http.MethodGet, "/books", nil)
-
-	return request
-}
-
-func newPostBookRequest(jsonStr []byte) *http.Request {
-	request, _ := http.NewRequest(http.MethodPost, "/book", bytes.NewBuffer(jsonStr))
-
-	return request
-}
-
-func newPutBookRequest(title string, jsonStr []byte) *http.Request {
-	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/books/%s", title), bytes.NewBuffer(jsonStr))
-
-	return request
 }

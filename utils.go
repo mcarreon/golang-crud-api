@@ -1,8 +1,12 @@
 package main
 
 import (
+	"bytes"
 	"encoding/json"
+	"fmt"
+	"io"
 	"net/http"
+	"testing"
 )
 
 // Checks for empty values
@@ -40,4 +44,66 @@ func GetIndexOfStruct(books []Book, title string) int {
 	}
 
 	return index
+}
+
+func getBooksFromResponse(t testing.TB, body io.Reader) (book []Book) {
+	t.Helper()
+
+	book, err := NewBooks(body)
+
+	if err != nil {
+		t.Fatalf("Unable to parse response from server %q into books, %v", body, err)
+	}
+
+	return book
+}
+
+func getBookFromResponse(t testing.TB, body io.Reader) Book {
+	t.Helper()
+
+	var book Book
+
+	err := json.NewDecoder(body).Decode(&book)
+
+	if err != nil {
+		t.Fatalf("Unable to parse response from server %q into books, %v", body, err)
+	}
+
+	return book
+}
+
+func NewBooks(rdr io.Reader) ([]Book, error) {
+	var book []Book
+	err := json.NewDecoder(rdr).Decode(&book)
+
+	if err != nil {
+		err = fmt.Errorf("problem parsing book, %v", err)
+	}
+
+	return book, err
+}
+
+// Universal request for GET/DEL specific book
+func newBookRequest(method, title string) *http.Request {
+	request, _ := http.NewRequest(method, fmt.Sprintf("/books/%s", title), nil)
+
+	return request
+}
+
+func newGetBooksRequest() *http.Request {
+	request, _ := http.NewRequest(http.MethodGet, "/books", nil)
+
+	return request
+}
+
+func newPostBookRequest(jsonStr []byte) *http.Request {
+	request, _ := http.NewRequest(http.MethodPost, "/book", bytes.NewBuffer(jsonStr))
+
+	return request
+}
+
+func newPutBookRequest(title string, jsonStr []byte) *http.Request {
+	request, _ := http.NewRequest(http.MethodPut, fmt.Sprintf("/books/%s", title), bytes.NewBuffer(jsonStr))
+
+	return request
 }
