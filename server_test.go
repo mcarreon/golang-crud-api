@@ -172,7 +172,7 @@ func TestPOSTBook(t *testing.T) {
 func TestPUTBook(t *testing.T) {
 	t.Run("should update book and recieve 200 status", func(t *testing.T) {
 		testBook := []Book{
-			{"Test", "John", timePlaceholder, "Publishers", 5, "CheckedIn"},
+			{"Test", "John", timePlaceholder, "Publishers", 3, "CheckedIn"},
 		}
 		targetBook := Book{"Test", "John", timePlaceholder, "Publishers", 3, "CheckedOut"}
 		store := StubBookStore{testBook}
@@ -216,7 +216,24 @@ func TestPUTBook(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		assertStatus(t, response.Code, http.StatusNotFound)
+		assertStatus(t, response.Code, http.StatusUnprocessableEntity)
+	})
+
+	t.Run("should fail due to bad rating and recieve 422 status", func(t *testing.T) {
+		testBook := []Book{
+			{"Testing", "John", timePlaceholder, "Publishers", 3, "CheckedIn"},
+		}
+		store := StubBookStore{testBook}
+		server := NewBookServer(&store)
+
+		var jsonStr = []byte(`{"rating": 4, "status": "CheckedOut"}`)
+
+		request := newPutBookRequest("Testing", jsonStr)
+		response := httptest.NewRecorder()
+
+		server.ServeHTTP(response, request)
+
+		assertStatus(t, response.Code, http.StatusUnprocessableEntity)
 	})
 }
 

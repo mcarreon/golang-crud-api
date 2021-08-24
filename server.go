@@ -77,9 +77,10 @@ func (b *BookServer) postHandler(w http.ResponseWriter, r *http.Request) {
 
 	hasGoodValues := CheckNotEmpty(book)
 	hasGoodStatus := ValidStatus(book)
+	hasGoodRating := ValidRating(book)
 
 	// If empty values or bad status, 400
-	if !hasGoodValues || !hasGoodStatus {
+	if !hasGoodValues || !hasGoodStatus || !hasGoodRating {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -102,19 +103,24 @@ func (b *BookServer) getBook(w http.ResponseWriter, r *http.Request, title strin
 
 // PUT request functionality
 func (b *BookServer) updateBook(w http.ResponseWriter, r *http.Request, title string) {
+	fields, err := DecodeUpdateFields(r)
+
+	if fields["rating"] != nil && (fields["rating"].(float64) < 0 || fields["rating"].(float64) > 3) {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+
+	// If unable to process update fields, 422
+	if err != nil {
+		w.WriteHeader(http.StatusUnprocessableEntity)
+		return
+	}
+
 	book := b.store.GetBook(title)
 
 	// If unable to find book, 404
 	if (Book{}) == book {
 		w.WriteHeader(http.StatusNotFound)
-		return
-	}
-
-	fields, err := DecodeUpdateFields(r)
-
-	// If unable to process update fields, 422
-	if err != nil {
-		w.WriteHeader(http.StatusUnprocessableEntity)
 		return
 	}
 

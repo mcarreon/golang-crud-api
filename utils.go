@@ -20,6 +20,10 @@ func ValidStatus(book Book) bool {
 	return (book.Status == "CheckedIn" || book.Status == "CheckedOut")
 }
 
+func ValidRating(book Book) bool {
+	return (book.Rating > 0 && book.Rating < 4)
+}
+
 func DecodeBook(r *http.Request) (Book, error) {
 	book := Book{}
 	err := json.NewDecoder(r.Body).Decode(&book)
