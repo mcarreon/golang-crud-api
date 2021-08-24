@@ -44,3 +44,17 @@ func assertBooksLen(t testing.TB, got, want int) {
 		t.Fatalf("got %d books, expecting %d books", got, want)
 	}
 }
+
+func assertGreaterThanLen(t testing.TB, got, want int) {
+	t.Helper()
+	if got < want {
+		t.Fatalf("got %d books, expecting more than %d books", got, want)
+	}
+}
+
+func assertField(t testing.TB, got, want string) {
+	t.Helper()
+	if got != want {
+		t.Fatalf("got %s, expecting %s", got, want)
+	}
+}
