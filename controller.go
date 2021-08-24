@@ -13,6 +13,7 @@ func NewPostgresStore() *PostgresStore {
 	return &PostgresStore{}
 }
 
+// Get all books in DB
 func (p *PostgresStore) GetBooks() []Book {
 	db := OpenConnection()
 	defer db.Close()
@@ -39,6 +40,7 @@ func (p *PostgresStore) GetBooks() []Book {
 	return books
 }
 
+// Get a single book based on title
 func (p *PostgresStore) GetBook(title string) Book {
 	db := OpenConnection()
 	defer db.Close()
@@ -62,6 +64,7 @@ func (p *PostgresStore) GetBook(title string) Book {
 	return book
 }
 
+// Delete a book
 func (p *PostgresStore) DeleteBook(title string) {
 	db := OpenConnection()
 	defer db.Close()
@@ -75,7 +78,7 @@ func (p *PostgresStore) DeleteBook(title string) {
 	}
 }
 
-//TODO: double check date, try to clean
+// Save a book
 func (p *PostgresStore) SaveBook(book Book) {
 	db := OpenConnection()
 	defer db.Close()
@@ -89,6 +92,7 @@ func (p *PostgresStore) SaveBook(book Book) {
 	}
 }
 
+// Update a book
 func (p *PostgresStore) UpdateBook(title string, fields map[string]interface{}) {
 	db := OpenConnection()
 	defer db.Close()

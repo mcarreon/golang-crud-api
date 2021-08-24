@@ -4,13 +4,9 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
-	"time"
 )
 
 const jsonContentType = "application/json"
-
-var timePlaceholder = time.Date(
-	2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
 
 type BookStore interface {
 	GetBooks() []Book

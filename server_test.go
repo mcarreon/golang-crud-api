@@ -4,11 +4,15 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 type StubBookStore struct {
 	books []Book
 }
+
+var timePlaceholder = time.Date(
+	2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
 
 func (s *StubBookStore) GetBooks() []Book {
 	return s.books
@@ -46,6 +50,9 @@ func (s *StubBookStore) UpdateBook(title string, fields map[string]interface{}) 
 			s.books[index].Author = field.(string)
 		case "publisher":
 			s.books[index].Publisher = field.(string)
+		case "publishedDate":
+			parsedTime, _ := time.Parse("2006-01-02T15:04:05.000Z", field.(string))
+			s.books[index].Published_Date = parsedTime
 		case "rating":
 			floatNum := field.(float64)
 			s.books[index].Rating = int(floatNum)
@@ -171,11 +178,13 @@ func TestPUTBook(t *testing.T) {
 		testBook := []Book{
 			{"Test", "John", timePlaceholder, "Publishers", 3, "CheckedIn"},
 		}
-		targetBook := Book{"Test", "John", timePlaceholder, "Publishers", 3, "CheckedOut"}
+		targetTime, _ := time.Parse("2006-01-02T15:04:05.000Z", "2006-01-02T15:04:05.000Z")
+		targetBook := Book{"Test", "John", targetTime, "Publishers", 3, "CheckedOut"}
+
 		store := StubBookStore{testBook}
 		server := NewBookServer(&store)
 
-		var jsonStr = []byte(`{"rating": 3, "status": "CheckedOut"}`)
+		var jsonStr = []byte(`{"rating": 3, "publishedDate": "2006-01-02T15:04:05.000Z", "status": "CheckedOut"}`)
 
 		request := newPutBookRequest("Test", jsonStr)
 		response := httptest.NewRecorder()
