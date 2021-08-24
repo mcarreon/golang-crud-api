@@ -4,7 +4,6 @@
 
 ```shell
 docker-compose up --build
-
 ```
 
 ### Quick Info
@@ -18,7 +17,6 @@ Made with Docker, Golang, and Postgresql
 There are 2 get routes:
 
 ```text
-
 /books 
 /book/[title]
 ```
@@ -30,7 +28,6 @@ There are 2 get routes:
 ### POST
 
 ```text
-
 /books
 ```
 
@@ -50,7 +47,6 @@ example body params:
 ### PUT
 
 ```text
-
 /book/[title]
 ```
 
@@ -59,7 +55,6 @@ example body params:
 ### DELETE
 
 ```text
-
 /book/[title]
 ```
 
