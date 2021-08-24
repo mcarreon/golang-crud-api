@@ -45,6 +45,8 @@ func TestFullFunctionality(t *testing.T) {
 		assertStatus(t, getResponse.Code, http.StatusNotFound)
 	})
 
+	server.ServeHTTP(httptest.NewRecorder(), newPostBookRequest([]byte(firstBook)))
+
 	t.Run("recieve a non-zero amount of books back", func(t *testing.T) {
 		response := httptest.NewRecorder()
 		server.ServeHTTP(response, newGetBooksRequest())
