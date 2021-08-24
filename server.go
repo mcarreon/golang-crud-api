@@ -4,9 +4,13 @@ import (
 	"encoding/json"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const jsonContentType = "application/json"
+
+var timePlaceholder = time.Date(
+	2009, 11, 17, 20, 34, 58, 651387237, time.UTC)
 
 type BookStore interface {
 	GetBooks() []Book
@@ -32,7 +36,6 @@ func NewBookServer(store BookStore) *BookServer {
 	router := http.NewServeMux()
 	router.Handle("/books", http.HandlerFunc(b.booksHandler))
 	router.Handle("/books/", http.HandlerFunc(b.bookHandler))
-	router.Handle("/book", http.HandlerFunc(b.postHandler))
 
 	b.Handler = router
 
@@ -50,23 +53,44 @@ func (b *BookServer) bookHandler(w http.ResponseWriter, r *http.Request) {
 		b.updateBook(w, r, title)
 	case http.MethodDelete:
 		b.deleteBook(w, r, title)
+	case http.MethodPost:
+		b.postBook(w, r)
 	}
 }
 
-// Handles GET request for all books
+// Handles GET request for all books and Post request
 func (b *BookServer) booksHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	case http.MethodGet:
+		b.getBooks(w, r)
+	case http.MethodPost:
+		b.postBook(w, r)
+	}
+}
+
+// Get all books
+func (b *BookServer) getBooks(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+
 	w.Header().Set("content-type", jsonContentType)
 	books := b.store.GetBooks()
 
 	if len(books) == 0 {
 		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 
 	json.NewEncoder(w).Encode(b.store.GetBooks())
 }
 
-// Handles POST request for books
-func (b *BookServer) postHandler(w http.ResponseWriter, r *http.Request) {
+// POST request functionality for books
+func (b *BookServer) postBook(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+
 	book, err := DecodeBook(r)
 
 	// If unable to parse bad JSON, 422
@@ -90,6 +114,10 @@ func (b *BookServer) postHandler(w http.ResponseWriter, r *http.Request) {
 
 // GET request functionality for single book
 func (b *BookServer) getBook(w http.ResponseWriter, r *http.Request, title string) {
+	if r.Method != http.MethodGet {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+
 	w.Header().Set("content-type", jsonContentType)
 	book := b.store.GetBook(title)
 
@@ -103,6 +131,10 @@ func (b *BookServer) getBook(w http.ResponseWriter, r *http.Request, title strin
 
 // PUT request functionality
 func (b *BookServer) updateBook(w http.ResponseWriter, r *http.Request, title string) {
+	if r.Method != http.MethodPut {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+
 	fields, err := DecodeUpdateFields(r)
 
 	if fields["rating"] != nil && (fields["rating"].(float64) < 0 || fields["rating"].(float64) > 3) {
@@ -129,6 +161,10 @@ func (b *BookServer) updateBook(w http.ResponseWriter, r *http.Request, title st
 
 // DEL request functionality
 func (b *BookServer) deleteBook(w http.ResponseWriter, r *http.Request, title string) {
+	if r.Method != http.MethodDelete {
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+
 	book := b.store.GetBook(title)
 
 	if (Book{}) == book {

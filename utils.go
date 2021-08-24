@@ -101,7 +101,7 @@ func newGetBooksRequest() *http.Request {
 }
 
 func newPostBookRequest(jsonStr []byte) *http.Request {
-	request, _ := http.NewRequest(http.MethodPost, "/book", bytes.NewBuffer(jsonStr))
+	request, _ := http.NewRequest(http.MethodPost, "/books", bytes.NewBuffer(jsonStr))
 
 	return request
 }

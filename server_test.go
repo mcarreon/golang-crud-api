@@ -85,9 +85,6 @@ func TestGETBooks(t *testing.T) {
 
 		server.ServeHTTP(response, request)
 
-		got := getBooksFromResponse(t, response.Body)
-
-		assertBooksLen(t, len(got), 0)
 		assertStatus(t, response.Code, http.StatusNotFound)
 	})
 }

@@ -21,7 +21,7 @@ func (p *PostgresStore) GetBooks() []Book {
 
 	var books []Book
 
-	rows, err := db.Query(fmt.Sprintf("select %v from go.books", releventCols))
+	rows, err := db.Query(fmt.Sprintf("select %v from books", releventCols))
 
 	defer rows.Close()
 
@@ -45,7 +45,7 @@ func (p *PostgresStore) GetBook(title string) Book {
 
 	fmt.Printf("Getting book with title = %v \n", title)
 
-	rows, err := db.Query(fmt.Sprintf("select %v from go.books where title = '%v'", releventCols, title))
+	rows, err := db.Query(fmt.Sprintf("select %v from books where title = '%v'", releventCols, title))
 
 	defer rows.Close()
 
@@ -68,7 +68,7 @@ func (p *PostgresStore) DeleteBook(title string) {
 
 	fmt.Printf("Deleting book with title = %v \n", title)
 
-	_, err := db.Query(fmt.Sprintf("delete from go.books where title = '%v'", title))
+	_, err := db.Query(fmt.Sprintf("delete from books where title = '%v'", title))
 
 	if err != nil {
 		panic(err)
@@ -82,7 +82,7 @@ func (p *PostgresStore) SaveBook(book Book) {
 
 	fmt.Printf("Posting book with title = %v \n", book.Title)
 
-	_, err := db.Query(fmt.Sprintf("insert into go.books(%v) values('%v', '%v', '%v', '%v', '%v', '%v')", releventCols, book.Title, book.Author, "2005-06-13T04:40:51Z", book.Publisher, book.Rating, book.Status))
+	_, err := db.Query(fmt.Sprintf("insert into books(%v) values('%v', '%v', '%v', '%v', '%v', '%v')", releventCols, book.Title, book.Author, "2005-06-13T04:40:51Z", book.Publisher, book.Rating, book.Status))
 
 	if err != nil {
 		panic(err)
@@ -106,7 +106,7 @@ func (p *PostgresStore) UpdateBook(title string, fields map[string]interface{}) 
 		counter++
 	}
 
-	queryStatement := fmt.Sprintf("update go.books set %s where title = '%s'", strings.Join(updateString, ","), title)
+	queryStatement := fmt.Sprintf("update books set %s where title = '%s'", strings.Join(updateString, ","), title)
 
 	_, err := db.Exec(queryStatement, updateArgs...)
 
